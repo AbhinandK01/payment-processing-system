@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Processing System | Premium Payment Portal</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- CSS Link -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Identity Services client script -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+
+    <!-- WebGL Background Canvas -->
+    <canvas id="webgl-bg-canvas"></canvas>
+
+    <!-- MAIN APP CONTAINER -->
+    <div class="app-container">
+
+        <!-- ========================================== -->
+        <!-- LANDING / LOGIN SCREEN                     -->
+        <!-- ========================================== -->
+        <section class="screen active" id="landing-screen">
+            <div class="landing-card glass">
+                <div class="landing-header">
+                    <div class="logo-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="2" y="5" width="20" height="14" rx="3" fill="url(#landing-gradient-logo)" />
+                            <path d="M16 10H20V14H16V10Z" fill="#F8FAFC" />
+                            <circle cx="11" cy="12" r="3" fill="#F8FAFC" opacity="0.3" />
+                            <defs>
+                                <linearGradient id="landing-gradient-logo" x1="2" y1="5" x2="22" y2="19" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#2563eb"/>
+                                    <stop offset="1" stop-color="#14b8a6"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <h1>Payment Processing System</h1>
+                    <p class="tagline">Payment Processing System & JVM Sandbox</p>
+                </div>
+                
+                <div class="landing-body">
+                    <!-- Configurator trigger -->
+                    <div class="oauth-config-toggle" id="oauth-toggle-btn">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        Configure Google OAuth
+                    </div>
+
+                    <!-- Client ID configuration section -->
+                    <div class="oauth-config-box glass" id="oauth-config-box" style="display: none;">
+                        <label for="oauth-client-id">Google Client ID</label>
+                        <input type="text" id="oauth-client-id" placeholder="123456-abcdef.apps.googleusercontent.com">
+                        <button id="save-client-id-btn">Apply Client ID</button>
+                        <div class="oauth-help">
+                            Note: Google Identity Services requires a web server origin (e.g. <code>http://localhost:3000</code>). Direct <code>file://</code> launches are blocked by Google policies.
+                        </div>
+                    </div>
+
+                    <div class="sign-in-method-divider"></div>
+
+                    <!-- Google Sign-In Container & Button -->
+                    <div class="auth-buttons-container" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- Real Google Identity Services (GIS) Sign-In Container -->
+                        <div id="gis-sign-in-wrapper" style="display:none; justify-content:center; margin-bottom:5px;">
+                            <div id="g_id_onload"></div>
+                            <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="filled_blue" data-text="signin_with" data-size="large" data-logo_alignment="left"></div>
+                        </div>
+
+                        <!-- Simulated Google Sign-In Button (default and offline fallback) -->
+                        <button class="btn-google-login ripple" id="google-login-trigger-btn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" style="margin-right: 10px;">
+                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.85z"/>
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.85c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                            <span>Sign in with Google</span>
+                        </button>
+
+                        <!-- Guest Sandbox Access Button -->
+                        <button class="btn-guest-login ripple" id="guest-login-trigger-btn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 10px;">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            <span>Access Guest Sandbox</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="landing-footer">
+                    <span>Payment Processing System • PCI-DSS Compliant</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SYSTEM NAVIGATION WRAPPER (Logged In)     -->
+        <!-- ========================================== -->
+        <section class="screen" id="dashboard-screen">
+            <div class="dashboard-wrapper">
+                
+                <!-- Left Sidebar Navigation -->
+                <aside class="sidebar no-print">
+                    <div class="sidebar-brand">
+                        <div class="logo-wrapper">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="2" y="5" width="20" height="14" rx="3" fill="url(#sidebar-gradient-logo)" />
+                                <path d="M16 10H20V14H16V10Z" fill="#F8FAFC" />
+                                <circle cx="11" cy="12" r="3" fill="#F8FAFC" opacity="0.3" />
+                                <defs>
+                                    <linearGradient id="sidebar-gradient-logo" x1="2" y1="5" x2="22" y2="19" gradientUnits="userSpaceOnUse">
+                                        <stop stop-color="#ffffff"/>
+                                        <stop offset="1" stop-color="#14b8a6"/>
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                            <span class="brand-name">Payment Processing System</span>
+                        </div>
+                    </div>
+
+                    <nav class="sidebar-nav">
+                        <button class="sidebar-btn active" data-view="dashboard">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+                            <span>Dashboard</span>
+                        </button>
+                        <button class="sidebar-btn" data-view="checkout">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                            <span>Payments Portal</span>
+                        </button>
+                        <button class="sidebar-btn" data-view="saved-methods">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                            <span>Saved Methods</span>
+                        </button>
+                        <button class="sidebar-btn" data-view="refunds">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><polyline points="16 3 21 8 16 13"></polyline><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><polyline points="8 21 3 16 8 11"></polyline></svg>
+                            <span>Refund Portal</span>
+                        </button>
+                        <button class="sidebar-btn" data-view="developer" id="dev-view-tab-btn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                            <span>Developer View</span>
+                        </button>
+                    </nav>
+
+                    <div class="sidebar-user">
+                        <div class="user-profile-widget">
+                            <div class="user-avatar" id="user-avatar">G</div>
+                            <div class="user-details">
+                                <h4 id="user-name">Guest User</h4>
+                                <span id="user-email">unauthenticated</span>
+                            </div>
+                        </div>
+                        <button class="btn-logout-sidebar" id="logout-btn" title="Sign Out">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                <polyline points="16 17 21 12 16 7"></polyline>
+                                <line x1="21" y1="12" x2="9" y2="12"></line>
+                            </svg>
+                            <span>Sign Out</span>
+                        </button>
+                    </div>
+                </aside>
+
+                <!-- Right Main Content Area -->
+                <main class="main-content">
+                    
+                    <!-- Top Bar Header -->
+                    <header class="top-bar no-print">
+                        <div class="mobile-header-row">
+                            <div class="menu-toggle-btn" id="menu-toggle-btn">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                            </div>
+                            <h2 id="page-title">Dashboard Overview</h2>
+                        </div>
+
+                        <!-- Sleek Bank Balance Widget -->
+                        <div class="balance-widget" id="balance-widget-container">
+                            <button id="check-balance-btn" class="btn-check-balance ripple">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 6px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                Check Balance
+                            </button>
+                            <div id="balance-display-container" style="display: none;" class="animate-balance-in">
+                                <span class="balance-label">Bank Balance:</span>
+                                <span class="balance-amount" id="balance-display">₹0.00</span>
+                                <button id="hide-balance-btn" class="btn-hide-balance" title="Hide Balance">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </header>
+
+                    <!-- VIEW 1: DASHBOARD OVERVIEW -->
+                    <div class="view-panel active" id="view-dashboard">
+                        <div class="dashboard-overview-hero">
+                            <h1 id="welcome-text">Welcome back!</h1>
+                            <p>Manage your transactions, saved cards, and check academic execution logs from your central portal.</p>
+                        </div>
+
+                        <div class="dashboard-stats-grid">
+                            <div class="stat-card glass">
+                                <div class="stat-icon" style="color:var(--primary-color); background:rgba(37,99,235,0.08);">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>Total Volume</h3>
+                                    <h2 id="stat-volume">₹0.00</h2>
+                                </div>
+                            </div>
+                            <div class="stat-card glass">
+                                <div class="stat-icon" style="color:var(--accent-teal); background:rgba(20,184,166,0.08);">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>Completed Payments</h3>
+                                    <h2 id="stat-tx-count">0</h2>
+                                </div>
+                            </div>
+                            <div class="stat-card glass">
+                                <div class="stat-icon" style="color:var(--warning); background:rgba(245,158,11,0.08);">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>Active Saved Methods</h3>
+                                    <h2 id="stat-methods-count">0</h2>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-grid">
+                            <div class="grid-left">
+                                <div class="card-title-header">
+                                    <h3>Quick Fintech Actions</h3>
+                                </div>
+                                <div class="quick-actions-row">
+                                    <button class="quick-action-btn glass ripple" data-nav="checkout">
+                                        <div class="action-icon" style="color:var(--primary-color);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></div>
+                                        <span>New Payment</span>
+                                    </button>
+                                    <button class="quick-action-btn glass ripple" data-nav="saved-methods">
+                                        <div class="action-icon" style="color:var(--accent-teal);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></div>
+                                        <span>Link Method</span>
+                                    </button>
+                                    <button class="quick-action-btn glass ripple" data-nav="refunds">
+                                        <div class="action-icon" style="color:var(--warning);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg></div>
+                                        <span>Claim Refund</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="grid-right">
+                                <div class="card-title-header">
+                                    <h3>Recent Transaction History</h3>
+                                </div>
+                                <div class="transactions-container" id="dashboard-txns-list">
+                                    <!-- Rendered dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VIEW 2: PAYMENTS PORTAL (CHECKOUT) -->
+                    <div class="view-panel" id="view-checkout">
+                        <div class="payment-layout-container">
+                            <div class="checkout-left">
+                                <h3 class="section-title">Select Payment Instrument</h3>
+                                <div class="payment-methods-grid">
+                                    <div class="method-card glass active" data-method="credit-card">
+                                        <div class="method-icon-wrapper">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line>
+                                            </svg>
+                                        </div>
+                                        <h4>Credit Card</h4>
+                                        <span class="btn-select-method-indicator">Select</span>
+                                    </div>
+                                    <div class="method-card glass" data-method="paypal">
+                                        <div class="method-icon-wrapper">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>
+                                            </svg>
+                                        </div>
+                                        <h4>PayPal Wallet</h4>
+                                        <span class="btn-select-method-indicator">Select</span>
+                                    </div>
+                                    <div class="method-card glass" data-method="bank-transfer">
+                                        <div class="method-icon-wrapper">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                            </svg>
+                                        </div>
+                                        <h4>Bank Transfer</h4>
+                                        <span class="btn-select-method-indicator">Select</span>
+                                    </div>
+                                </div>
+
+                                <div class="payment-form-card glass" style="margin-top: 20px;">
+                                    <div class="form-header">
+                                        <h3>Secure Payment Checkout</h3>
+                                        <span class="method-badge" id="form-method-badge">Card Payment</span>
+                                    </div>
+
+                                    <div class="form-alert error-alert" id="form-error-alert" style="display:none;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                        <span id="error-message">Field validation failed</span>
+                                    </div>
+
+                                    <!-- CARD FORM -->
+                                    <form id="credit-card-form" class="payment-form active">
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="cc-name">Card Holder Name</label>
+                                                <input type="text" id="cc-name" placeholder="Enter card holder name" required autocomplete="off">
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="cc-number">Card Number</label>
+                                                <input type="text" id="cc-number" placeholder="**** **** **** ****" maxlength="19" required autocomplete="off">
+                                            </div>
+                                        </div>
+                                        <div class="form-row split">
+                                            <div class="form-group">
+                                                <label for="cc-expiry">Expiry Date</label>
+                                                <input type="text" id="cc-expiry" placeholder="MM/YY" maxlength="5" required autocomplete="off">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="cc-cvv">CVV</label>
+                                                <input type="password" id="cc-cvv" placeholder="Enter CVV" maxlength="3" required autocomplete="off">
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="cc-amount">Amount (INR)</label>
+                                                <div class="amount-input-wrapper">
+                                                    <span class="currency-symbol">₹</span>
+                                                    <input type="number" id="cc-amount" min="1" step="any" placeholder="Enter payment amount" required autocomplete="off">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn-pay ripple">
+                                            <span class="btn-text">Pay Now</span>
+                                            <span class="btn-spinner"></span>
+                                        </button>
+                                    </form>
+
+                                    <!-- WALLET FORM -->
+                                    <form id="paypal-form" class="payment-form">
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="pp-email">PayPal Email Address</label>
+                                                <input type="email" id="pp-email" placeholder="Enter your email" required autocomplete="off">
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="pp-password">PayPal Password</label>
+                                                <input type="password" id="pp-password" placeholder="Enter password" required autocomplete="off">
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="pp-amount">Amount (INR)</label>
+                                                <div class="amount-input-wrapper">
+                                                    <span class="currency-symbol">₹</span>
+                                                    <input type="number" id="pp-amount" min="1" step="any" placeholder="Enter payment amount" required autocomplete="off">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn-pay ripple">
+                                            <span class="btn-text">Verify & Pay</span>
+                                            <span class="btn-spinner"></span>
+                                        </button>
+                                    </form>
+
+                                    <!-- BANK TRANSFER FORM -->
+                                    <form id="bank-transfer-form" class="payment-form">
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="bt-bank-name">Bank Name</label>
+                                                <input type="text" id="bt-bank-name" placeholder="Enter bank name" required autocomplete="off">
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="bt-account-number">Account Number</label>
+                                                <input type="text" id="bt-account-number" placeholder="Enter account number" required autocomplete="off">
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="bt-ifsc">IFSC Code</label>
+                                                <input type="text" id="bt-ifsc" placeholder="Enter IFSC code" maxlength="11" required autocomplete="off">
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="bt-amount">Amount (INR)</label>
+                                                <div class="amount-input-wrapper">
+                                                    <span class="currency-symbol">₹</span>
+                                                    <input type="number" id="bt-amount" min="1" step="any" placeholder="Enter payment amount" required autocomplete="off">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn-pay ripple">
+                                            <span class="btn-text">Submit Bank Transfer</span>
+                                            <span class="btn-spinner"></span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div class="checkout-right">
+                                <h3 class="section-title">Saved Payment Methods</h3>
+                                <div class="quick-select-methods-container" id="quick-saved-methods-checkout-list">
+                                    <!-- Rendered dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VIEW 3: SAVED METHODS (CRUD) -->
+                    <div class="view-panel" id="view-saved-methods">
+                        <div class="saved-methods-header no-print">
+                            <h3>Manage Linked Payment Instruments</h3>
+                            <button class="btn-add-new-method ripple" id="open-add-card-btn">+ Add Saved Method</button>
+                        </div>
+
+                        <!-- Form Drawer (Slide out drawer) -->
+                        <div class="add-card-drawer glass" id="add-card-drawer" style="display: none;">
+                            <div class="drawer-header">
+                                <h4 id="drawer-title">Link New Payment Account</h4>
+                                <button class="close-drawer-btn" id="close-card-drawer-btn">&times;</button>
+                            </div>
+                            <div class="drawer-body">
+                                <input type="hidden" id="method-edit-id">
+                                <div class="form-group" style="margin-bottom:12px;">
+                                    <label for="method-add-type">Account Type</label>
+                                    <select id="method-add-type" class="custom-select" style="width:100%;">
+                                        <option value="CreditCard">Credit Card</option>
+                                        <option value="PayPal">PayPal Wallet</option>
+                                        <option value="BankTransfer">Bank Account</option>
+                                    </select>
+                                </div>
+
+                                <!-- CC Fields -->
+                                <div id="drawer-fields-cc">
+                                    <div class="form-group" style="margin-bottom:10px;">
+                                        <label for="method-cc-holder">Card Holder Name</label>
+                                        <input type="text" id="method-cc-holder" class="custom-input" placeholder="Enter card holder name">
+                                    </div>
+                                    <div class="form-group" style="margin-bottom:10px;">
+                                        <label for="method-cc-number">Card Number</label>
+                                        <input type="text" id="method-cc-number" class="custom-input" placeholder="**** **** **** ****" maxlength="19">
+                                    </div>
+                                    <div class="form-row split" style="margin-bottom:10px;">
+                                        <div class="form-group">
+                                            <label for="method-cc-exp">Expiry</label>
+                                            <input type="text" id="method-cc-exp" class="custom-input" placeholder="MM/YY" maxlength="5">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="method-cc-network">Network</label>
+                                            <select id="method-cc-network" class="custom-select">
+                                                <option value="visa">Visa</option>
+                                                <option value="mastercard">Mastercard</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- PayPal Fields -->
+                                <div id="drawer-fields-pp" style="display:none;">
+                                    <div class="form-group" style="margin-bottom:10px;">
+                                        <label for="method-pp-email">PayPal Email</label>
+                                        <input type="email" id="method-pp-email" class="custom-input" placeholder="Enter your email">
+                                    </div>
+                                </div>
+
+                                <!-- Bank Account Fields -->
+                                <div id="drawer-fields-bt" style="display:none;">
+                                    <div class="form-group" style="margin-bottom:10px;">
+                                        <label for="method-bt-bank">Bank Name</label>
+                                        <input type="text" id="method-bt-bank" class="custom-input" placeholder="Enter bank name">
+                                    </div>
+                                    <div class="form-group" style="margin-bottom:10px;">
+                                        <label for="method-bt-acc">Account Number</label>
+                                        <input type="text" id="method-bt-acc" class="custom-input" placeholder="Enter account number">
+                                    </div>
+                                    <div class="form-group" style="margin-bottom:10px;">
+                                        <label for="method-bt-ifsc">IFSC Code</label>
+                                        <input type="text" id="method-bt-ifsc" class="custom-input" placeholder="Enter IFSC code" maxlength="11">
+                                    </div>
+                                </div>
+
+                                <div class="form-group" style="margin-bottom:10px; flex-direction:row; align-items:center; gap:8px;">
+                                    <input type="checkbox" id="method-default-chk" style="width:auto; cursor:pointer;">
+                                    <label for="method-default-chk" style="cursor:pointer; margin-top:2px;">Set as default payment method</label>
+                                </div>
+
+                                <button class="btn-pay ripple" id="save-new-method-btn" style="margin-top:10px;">Save Payment Method</button>
+                            </div>
+                        </div>
+
+                        <!-- Saved Cards List Grid -->
+                        <div class="saved-methods-container" id="saved-methods-list">
+                            <!-- Rendered dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- VIEW 4: REFUND CLAIMS PORTAL -->
+                    <div class="view-panel" id="view-refunds">
+                        <div class="refunds-layout-grid">
+                            <div class="refunds-form-pane">
+                                <h3 class="section-title" style="margin-bottom: 14px;">Initiate a Refund Claim</h3>
+                                
+                                <div class="payment-form-card glass">
+                                    <form id="refund-portal-form">
+                                        <div class="form-row split">
+                                            <div class="form-group">
+                                                <label for="refund-txn-select">Select Transaction ID</label>
+                                                <select id="refund-txn-select" class="custom-select" required>
+                                                    <option value="">-- Choose Transaction --</option>
+                                                    <!-- Filled dynamically -->
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="refund-amount">Refund Amount (INR)</label>
+                                                <input type="number" id="refund-amount" class="custom-input" placeholder="0.00" readonly required>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-row split" style="margin-top: 12px;">
+                                            <div class="form-group">
+                                                <label for="refund-cust-name">Customer Name</label>
+                                                <input type="text" id="refund-cust-name" class="custom-input" readonly placeholder="Enter card holder name">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="refund-method">Payment Method</label>
+                                                <input type="text" id="refund-method" class="custom-input" readonly placeholder="Payment instrument description">
+                                            </div>
+                                        </div>
+
+                                        <div class="form-row" style="margin-top: 12px;">
+                                            <div class="form-group">
+                                                <label for="refund-reason">Refund Reason</label>
+                                                <select id="refund-reason" class="custom-select" required>
+                                                    <option value="">-- Choose Reason --</option>
+                                                    <option value="Accidental Purchase">Accidental Purchase</option>
+                                                    <option value="Fraudulent Charge">Fraudulent Charge</option>
+                                                    <option value="Technical Error">Technical Error</option>
+                                                    <option value="Service Unusable">Product/Service Unusable</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-row" style="margin-top: 12px;">
+                                            <div class="form-group">
+                                                <label for="refund-remarks">Additional Remarks</label>
+                                                <textarea id="refund-remarks" class="custom-input" rows="2" placeholder="Describe the reason for requesting a refund..."></textarea>
+                                            </div>
+                                        </div>
+
+                                        <button type="submit" class="btn-refund-submit ripple" style="margin-top: 18px;">
+                                            Submit Refund Claim
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div class="refunds-ledger-pane">
+                                <h3 class="section-title" style="margin-bottom:12px;">Refund Ledger Log</h3>
+                                <div class="refunds-ledger-container glass">
+                                    <div style="overflow-x:auto;">
+                                        <table class="refund-ledger-table" id="refund-ledger-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Refund ID</th>
+                                                    <th>Transaction ID</th>
+                                                    <th>Method</th>
+                                                    <th>Amount</th>
+                                                    <th>Reason</th>
+                                                    <th>Audit Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="refund-ledger-body">
+                                                <!-- Dynamic list -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VIEW 5: JAVA OOP DEMONSTRATION -->
+                    <div class="view-panel" id="view-developer">
+                        <div class="developer-layout-container">
+                            
+                            <!-- Left: Code IDE simulator panel -->
+                            <div class="ide-panel">
+                                <div class="visualizer-card glass">
+                                    <div class="ide-header">
+                                        <div class="ide-dots">
+                                            <span class="dot red"></span>
+                                            <span class="dot yellow"></span>
+                                            <span class="dot green"></span>
+                                        </div>
+                                        <div class="ide-title">java_backend_simulation IDE</div>
+                                        <div class="concept-indicator" id="active-concept-indicator">Ready</div>
+                                    </div>
+
+                                    <!-- Tabs -->
+                                    <div class="ide-tab-bar" id="ide-tabs">
+                                        <button class="ide-tab active" data-file="Payment.java">Payment.java</button>
+                                        <button class="ide-tab" data-file="CardPayment.java">CardPayment.java</button>
+                                        <button class="ide-tab" data-file="DigitalWalletPayment.java">DigitalWalletPayment.java</button>
+                                        <button class="ide-tab" data-file="AccountTransferPayment.java">AccountTransferPayment.java</button>
+                                        <button class="ide-tab" data-file="PaymentValidator.java">PaymentValidator.java</button>
+                                        <button class="ide-tab" data-file="PaymentGateway.java">PaymentGateway.java</button>
+                                        <button class="ide-tab" data-file="RefundRequest.java">RefundRequest.java</button>
+                                    </div>
+
+                                    <!-- Display -->
+                                    <div class="ide-code-container">
+                                        <pre class="ide-code"><code id="code-display"></code></pre>
+                                    </div>
+
+                                    <!-- Bottom Console tabs -->
+                                    <div class="ide-footer-console">
+                                        <div class="console-tab-header">
+                                            <button class="console-tab-btn active" data-tab="explanation">OOP Concept Analysis</button>
+                                            <button class="console-tab-btn" data-tab="terminal">Simulated JVM Output (stdout)</button>
+                                        </div>
+                                        
+                                        <div class="console-tab-content active" id="explanation-content">
+                                            <div class="welcome-explanation" id="dev-welcome-box">
+                                                <h4>Java OOP Academic Sandbox</h4>
+                                                <p>This developer portal mirrors the internal structures running on the client payment gateway. Execute transactions on the payment workspace, then check this panel to verify class code logic and traces:</p>
+                                                <div class="concept-matrix">
+                                                    <div class="concept-cell">
+                                                        <strong>Abstraction</strong>
+                                                        <span>Abstract base Payment class with abstract processPayment and refund routines.</span>
+                                                    </div>
+                                                    <div class="concept-cell">
+                                                        <strong>Inheritance</strong>
+                                                        <span>Subclasses extending Payment base variables.</span>
+                                                    </div>
+                                                    <div class="concept-cell">
+                                                        <strong>Encapsulation</strong>
+                                                        <span>Private attributes protected via validator calls and public getters/setters.</span>
+                                                    </div>
+                                                    <div class="concept-cell">
+                                                        <strong>Dynamic Polymorphism</strong>
+                                                        <span>Gateway routing execute calls dynamically using abstract Payment variables.</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Dynamic Trace -->
+                                            <div class="trace-steps-container" id="trace-steps" style="display: none;">
+                                                <div class="trace-header">
+                                                    <span class="trace-title">Dynamic Polymorphism Tracer</span>
+                                                    <span class="trace-badge">GATEWAY INTERCEPT</span>
+                                                </div>
+                                                <div class="trace-steps-list" id="trace-steps-list"></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="console-tab-content" id="terminal-content" style="display: none;">
+                                            <div class="terminal-body" id="terminal-logs">
+                                                <div class="terminal-line system-line">[System] JVM console ready. Run payments on portal to intercept logs...</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right: Architecture UML and explanations -->
+                            <div class="uml-panel">
+                                <div class="uml-card glass">
+                                    <h3>Java Backend Architecture</h3>
+                                    <p class="uml-desc">This UML entity relationship shows the structure of the compilable java classes placed in the <code>java_backend/</code> project folder.</p>
+                                    
+                                    <div class="uml-diagram">
+                                        <div class="uml-class parent-class">
+                                            <div class="class-header">&lt;&lt;Abstract&gt;&gt;<br>Payment</div>
+                                            <div class="class-attributes">
+                                                - transactionId: String<br>
+                                                - amount: double<br>
+                                                - refundStatus: String
+                                            </div>
+                                            <div class="class-methods">
+                                                + processPayment(): abstract boolean<br>
+                                                + refund(): abstract boolean
+                                            </div>
+                                        </div>
+
+                                        <div class="uml-connector-lines">
+                                            <div class="line vertical"></div>
+                                            <div class="line horizontal"></div>
+                                        </div>
+
+                                        <div class="uml-subclasses-grid">
+                                            <div class="uml-class subclass">
+                                                <div class="class-header">CardPayment</div>
+                                                <div class="class-attributes">- cardNumber: String</div>
+                                                <div class="class-methods">+ processPayment()<br>+ refund()</div>
+                                            </div>
+                                            <div class="uml-class subclass">
+                                                <div class="class-header">DigitalWalletPayment</div>
+                                                <div class="class-attributes">- email: String</div>
+                                                <div class="class-methods">+ processPayment()<br>+ refund()</div>
+                                            </div>
+                                            <div class="uml-class subclass">
+                                                <div class="class-header">AccountTransferPayment</div>
+                                                <div class="class-attributes">- accountNumber: String</div>
+                                                <div class="class-methods">+ processPayment()<br>+ refund()</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </main>
+            </div>
+        </section>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- PAYMENT PROCESSING MODAL OVERLAY            -->
+    <!-- ========================================== -->
+    <div class="processing-modal-backdrop" id="processing-modal">
+        <div class="processing-card glass">
+            <div class="processing-loader-wrapper" id="processing-loader-container">
+                <svg class="spinner-svg" viewBox="0 0 50 50">
+                    <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+                </svg>
+            </div>
+            <div class="processing-success-icon" id="processing-success-container" style="display:none;">
+                <svg class="success-checkmark" viewBox="0 0 52 52">
+                    <circle class="success-circle" cx="26" cy="26" r="25" fill="none"></circle>
+                    <path class="success-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"></path>
+                </svg>
+            </div>
+            <h3 id="processing-status-title">Securing transaction...</h3>
+            <p id="processing-status-desc">Connecting to bank payment gateway channel...</p>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- RECEIPT OVERLAY MODAL (Printable)          -->
+    <!-- ========================================== -->
+    <div class="receipt-modal-backdrop" id="receipt-modal">
+        <div class="receipt-container" id="receipt-print-area">
+            
+            <div class="receipt-header">
+                <div class="receipt-badge-circle">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <h3>Payment Receipt</h3>
+                <span class="receipt-merchant" id="receipt-merchant-name">Payment Processing System Merchant Services</span>
+            </div>
+
+            <div class="receipt-body">
+                <div class="receipt-row-amount">
+                    <span class="amount-title">AMOUNT PAID</span>
+                    <h2 class="amount-val" id="receipt-paid-amount">₹0.00</h2>
+                </div>
+
+                <div class="receipt-info-grid">
+                    <div class="info-item">
+                        <span class="item-label">Receipt Number</span>
+                        <span class="item-val" id="receipt-no">REC-00000000-0000</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="item-label">Reference Number</span>
+                        <span class="item-val" id="receipt-ref-no">000000000000</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="item-label">Transaction ID</span>
+                        <span class="item-val" id="receipt-txn-id">TXN_00000000</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="item-label">Payment Date</span>
+                        <span class="item-val" id="receipt-date">2026-07-26 12:00:00</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="item-label">Customer Name</span>
+                        <span class="item-val" id="receipt-cust-name">Guest User</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="item-label">Payment Method</span>
+                        <span class="item-val" id="receipt-payment-method">Card Payment</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="item-label">Payment Account</span>
+                        <span class="item-val" id="receipt-masked-details">**** **** **** 0000</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="item-label">Payment Status</span>
+                        <span class="item-val receipt-status-badge success" id="receipt-payment-status">SUCCESS</span>
+                    </div>
+                    <div class="info-item" style="grid-column: span 2;">
+                        <span class="item-label">Refund Status</span>
+                        <span class="item-val" id="receipt-refund-status">NONE</span>
+                    </div>
+                </div>
+
+                <div class="receipt-thankyou">
+                    <p id="receipt-thankyou-msg">Thank you for banking with Payment Processing System!</p>
+                </div>
+            </div>
+
+            <div class="receipt-actions no-print">
+                <button class="btn-receipt-action cancel" id="close-receipt-btn">Close</button>
+                <button class="btn-receipt-action print" id="print-receipt-btn">Print Receipt</button>
+                <button class="btn-receipt-action download" id="pdf-receipt-btn">Download PDF</button>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- GUEST ACCOUNT MODAL SETUP                  -->
+    <!-- ========================================== -->
+    <div class="modal-backdrop" id="guest-setup-modal">
+        <div class="guest-setup-card glass">
+            <h3>Configure Guest Sandbox Session</h3>
+            <p>Access the simulation immediately by providing temporary login parameters. These are saved local to your session.</p>
+            <form id="guest-setup-form">
+                <div class="form-group" style="margin-top:14px;">
+                    <label for="guest-input-name">Full Name</label>
+                    <input type="text" id="guest-input-name" placeholder="Enter your full name" required autocomplete="off">
+                </div>
+                <div class="form-group" style="margin-top:12px;">
+                    <label for="guest-input-email">Email Address</label>
+                    <input type="email" id="guest-input-email" placeholder="Enter your email" required autocomplete="off">
+                </div>
+                <div class="guest-setup-actions" style="margin-top:20px; display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" class="btn-guest-cancel" id="guest-setup-cancel-btn">Cancel</button>
+                    <button type="submit" class="btn-guest-confirm">Launch Session</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- GOOGLE ACCOUNT SIMULATION MODAL            -->
+    <!-- ========================================== -->
+    <div class="modal-backdrop" id="google-sim-modal">
+        <div class="google-sim-card glass">
+            <div class="google-sim-header">
+                <svg width="28" height="28" viewBox="0 0 24 24" style="margin-bottom: 8px; display: block; margin-left: auto; margin-right: auto;">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.85z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.85c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                <h3>Choose an account</h3>
+                <p class="google-sim-subtitle">to sign in to <span>Payment Processing System</span></p>
+            </div>
+            
+            <div class="google-accounts-list">
+                <div class="google-account-item ripple" data-account="sarah">
+                    <div class="account-avatar" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;">SJ</div>
+                    <div class="account-details">
+                        <span class="account-name">Sarah Jenkins</span>
+                        <span class="account-email">sarah.jenkins@gmail.com</span>
+                    </div>
+                </div>
+                
+                <div class="google-account-item ripple" data-account="alex">
+                    <div class="account-avatar" style="background: linear-gradient(135deg, #10b981 0%, #047857 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;">AM</div>
+                    <div class="account-details">
+                        <span class="account-name">Alex Mercer</span>
+                        <span class="account-email">alex.mercer@gmail.com</span>
+                    </div>
+                </div>
+                
+                <div class="google-account-item ripple" data-account="custom">
+                    <div class="account-avatar custom-avatar" style="background: #f1f5f9; color: #475569; display: flex; align-items: center; justify-content: center;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                    <div class="account-details">
+                        <span class="account-name">Use another account</span>
+                        <span class="account-email">Configure custom name & email</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom User Info inputs (hidden by default) -->
+            <form id="google-custom-form" style="display: none; margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 15px; text-align: left;">
+                <div class="form-group">
+                    <label for="google-custom-name" style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Full Name</label>
+                    <input type="text" id="google-custom-name" placeholder="E.g. Jane Doe" required autocomplete="off" style="width:100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; margin-top: 4px;">
+                </div>
+                <div class="form-group" style="margin-top: 12px;">
+                    <label for="google-custom-email" style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">Google Email Address</label>
+                    <input type="email" id="google-custom-email" placeholder="jane.doe@gmail.com" required autocomplete="off" style="width:100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; margin-top: 4px;">
+                </div>
+                <div class="google-sim-actions" style="margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn-google-back" id="google-custom-back-btn" style="background:none; border:none; padding:8px 16px; cursor:pointer; font-size:0.85rem; color:#475569; font-weight:600;">Back</button>
+                    <button type="submit" class="btn-google-confirm" style="background:#1a73e8; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-size:0.85rem; font-weight:600; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">Sign In</button>
+                </div>
+            </form>
+
+            <div class="google-sim-footer" style="margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 15px; display: flex; justify-content: flex-end;">
+                <button type="button" class="btn-google-cancel" id="google-sim-cancel-btn" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; padding:8px 16px; border-radius:6px; cursor:pointer; font-size:0.85rem; font-weight:600;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- UI Notification popup -->
+    <div class="ui-toast-container" id="toast-container"></div>
+
+    <!-- JS Files -->
+    <script src="background.js"></script>
+    <script src="java_code.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
